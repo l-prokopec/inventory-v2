@@ -530,9 +530,6 @@ export default function App() {
                           <h2>{item.name}</h2>
                           {isLowStock ? <span className="stock-chip">Nízký stav</span> : null}
                         </div>
-                        <p className="meta">
-                          Přidáno {new Date(item.createdAt).toLocaleDateString("cs-CZ")}
-                        </p>
                       </div>
 
                       <div className="quantity-badge" aria-label={`Množství ${item.quantity}`}>
