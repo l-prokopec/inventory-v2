@@ -3,8 +3,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const STORAGE_KEY = "inventory-tracker-items";
 const LOW_STOCK_THRESHOLD = 3;
 const SORT_OPTIONS = {
-  newest: "Od nejnovějších",
-  oldest: "Od nejstarších",
   quantityDesc: "Množství od nejvyššího",
   quantityAsc: "Množství od nejnižšího",
   nameAsc: "Název A-Z",
@@ -52,11 +50,6 @@ function sortItems(items, sortBy) {
   const nextItems = [...items];
 
   switch (sortBy) {
-    case "oldest":
-      return nextItems.sort(
-        (first, second) =>
-          new Date(first.createdAt).getTime() - new Date(second.createdAt).getTime(),
-      );
     case "quantityDesc":
       return nextItems.sort((first, second) => second.quantity - first.quantity);
     case "quantityAsc":
@@ -65,21 +58,17 @@ function sortItems(items, sortBy) {
       return nextItems.sort((first, second) => first.name.localeCompare(second.name, "cs"));
     case "nameDesc":
       return nextItems.sort((first, second) => second.name.localeCompare(first.name, "cs"));
-    case "newest":
     default:
-      return nextItems.sort(
-        (first, second) =>
-          new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime(),
-      );
+      return nextItems;
   }
 }
 
 export default function App() {
-  const [items, setItems] = useState(() => sortItems(readStoredItems(), "newest"));
+  const [items, setItems] = useState(() => readStoredItems());
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [query, setQuery] = useState("");
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState("quantityDesc");
   const [feedback, setFeedback] = useState("");
   const [installPrompt, setInstallPrompt] = useState(null);
   const feedbackTimeoutRef = useRef(null);
@@ -274,7 +263,7 @@ export default function App() {
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Jemná klobása"
+                placeholder="Mexická klobása"
                 maxLength={80}
               />
             </label>
