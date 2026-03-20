@@ -154,12 +154,6 @@ export default function App() {
           : item,
       ),
     );
-
-    showFeedback(
-      change > 0
-        ? `Množství položky ${currentItem.name} bylo zvýšeno.`
-        : `Množství položky ${currentItem.name} bylo sníženo.`,
-    );
   }
 
   function handleDelete(id) {
@@ -206,27 +200,54 @@ export default function App() {
     );
   }, [items, query]);
 
+  const totalQuantity = useMemo(
+    () => items.reduce((sum, item) => sum + item.quantity, 0),
+    [items],
+  );
+
+  const lowStockCount = useMemo(
+    () => items.filter((item) => item.quantity <= LOW_STOCK_THRESHOLD).length,
+    [items],
+  );
+
   return (
     <div className="app-shell">
       <main className="app-card">
         <header className="hero">
-          <div>
+          <div className="hero-copy-wrap">
             <p className="eyebrow">Lokální inventář</p>
             <h1>Sledování inventáře</h1>
             <p className="hero-copy">
-              Sledujte množství jen v tomto zařízení. Data jsou uložena v prohlížeči
-              a zůstávají pouze v tomto profilu.
+              Rychlý přehled zásob v živějším kabátu. Všechno zůstává uložené jen
+              v tomto prohlížeči.
             </p>
           </div>
 
-          {installPrompt ? (
-            <button className="secondary-button" type="button" onClick={handleInstall}>
-              Nainstalovat aplikaci
-            </button>
-          ) : null}
+          <div className="hero-side">
+            {installPrompt ? (
+              <button className="secondary-button" type="button" onClick={handleInstall}>
+                Nainstalovat aplikaci
+              </button>
+            ) : null}
+
+            <div className="hero-stats" aria-label="Souhrn inventáře">
+              <article className="stat-card stat-card-blue">
+                <span className="stat-label">Položky</span>
+                <strong>{items.length}</strong>
+              </article>
+              <article className="stat-card stat-card-orange">
+                <span className="stat-label">Celkem kusů</span>
+                <strong>{totalQuantity}</strong>
+              </article>
+              <article className="stat-card stat-card-pink">
+                <span className="stat-label">Nízký stav</span>
+                <strong>{lowStockCount}</strong>
+              </article>
+            </div>
+          </div>
         </header>
 
-        <section className="panel">
+        <section className="panel panel-strong">
           <form className="item-form" onSubmit={handleAddItem}>
             <label className="field">
               <span>Název položky</span>
@@ -268,69 +289,75 @@ export default function App() {
             />
           </label>
           <p className="item-count">
-            {filteredItems.length}{" "}
-            {filteredItems.length === 1 ? "položka" : "položek"}
+            Zobrazeno {filteredItems.length} {filteredItems.length === 1 ? "položka" : "položek"}
           </p>
         </section>
 
         <section className="list-section">
           {filteredItems.length === 0 ? (
             <div className="empty-state">
+              <div className="empty-icon">+</div>
               <h2>Zatím žádné položky</h2>
               <p>
-                Přidejte svou první položku výše. Vše zůstává uložené v localStorage
-                na tomto zařízení.
+                Přidejte svou první položku výše. Inventář se ukládá do localStorage
+                jen na tomto zařízení.
               </p>
             </div>
           ) : (
             <ul className="item-list">
-              {filteredItems.map((item) => (
-                <li
-                  key={item.id}
-                  className={`item-row ${
-                    item.quantity <= LOW_STOCK_THRESHOLD ? "is-low-stock" : ""
-                  }`}
-                >
-                  <div className="item-main">
-                    <div>
-                      <h2>{item.name}</h2>
-                      <p className="meta">
-                        Přidáno {new Date(item.createdAt).toLocaleDateString("cs-CZ")}
-                      </p>
+              {filteredItems.map((item) => {
+                const isLowStock = item.quantity <= LOW_STOCK_THRESHOLD;
+
+                return (
+                  <li
+                    key={item.id}
+                    className={`item-row ${isLowStock ? "is-low-stock" : ""}`}
+                  >
+                    <div className="item-main">
+                      <div className="item-copy">
+                        <div className="item-headline">
+                          <h2>{item.name}</h2>
+                          {isLowStock ? <span className="stock-chip">Nízký stav</span> : null}
+                        </div>
+                        <p className="meta">
+                          Přidáno {new Date(item.createdAt).toLocaleDateString("cs-CZ")}
+                        </p>
+                      </div>
+
+                      <div className="quantity-badge" aria-label={`Množství ${item.quantity}`}>
+                        <span className="quantity-label">Množství</span>
+                        <strong>{item.quantity}</strong>
+                      </div>
                     </div>
 
-                    <div className="quantity-badge" aria-label={`Množství ${item.quantity}`}>
-                      {item.quantity}
+                    <div className="item-actions">
+                      <button
+                        className="action-button action-button-minus"
+                        type="button"
+                        onClick={() => updateQuantity(item.id, -1)}
+                        aria-label={`Snížit množství položky ${item.name}`}
+                      >
+                        -
+                      </button>
+                      <button
+                        className="action-button action-button-plus"
+                        type="button"
+                        onClick={() => updateQuantity(item.id, 1)}
+                        aria-label={`Zvýšit množství položky ${item.name}`}
+                      >
+                        +
+                      </button>
+                      <button
+                        className="delete-button"
+                        type="button"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        Smazat
+                      </button>
                     </div>
-                  </div>
-
-                  <div className="item-actions">
-                    <button
-                      className="action-button"
-                      type="button"
-                      onClick={() => updateQuantity(item.id, -1)}
-                      aria-label={`Snížit množství položky ${item.name}`}
-                    >
-                      -
-                    </button>
-                    <button
-                      className="action-button"
-                      type="button"
-                      onClick={() => updateQuantity(item.id, 1)}
-                      aria-label={`Zvýšit množství položky ${item.name}`}
-                    >
-                      +
-                    </button>
-                    <button
-                      className="delete-button"
-                      type="button"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      Smazat
-                    </button>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
