@@ -5,6 +5,8 @@ const LOW_STOCK_THRESHOLD = 3;
 const SORT_OPTIONS = {
   newest: "Od nejnovějších",
   oldest: "Od nejstarších",
+  quantityDesc: "Množství od nejvyššího",
+  quantityAsc: "Množství od nejnižšího",
   nameAsc: "Název A-Z",
   nameDesc: "Název Z-A",
 };
@@ -55,6 +57,10 @@ function sortItems(items, sortBy) {
         (first, second) =>
           new Date(first.createdAt).getTime() - new Date(second.createdAt).getTime(),
       );
+    case "quantityDesc":
+      return nextItems.sort((first, second) => second.quantity - first.quantity);
+    case "quantityAsc":
+      return nextItems.sort((first, second) => first.quantity - second.quantity);
     case "nameAsc":
       return nextItems.sort((first, second) => first.name.localeCompare(second.name, "cs"));
     case "nameDesc":
@@ -233,7 +239,7 @@ export default function App() {
       <main className="app-card">
         <header className="hero">
           <div className="hero-copy-wrap">
-            <h1>Sledování inventáře</h1>
+            <h1>Klobásovník</h1>
           </div>
 
           <div className="hero-side">
@@ -268,7 +274,7 @@ export default function App() {
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Kávová zrna"
+                placeholder="Jemná klobása"
                 maxLength={80}
               />
             </label>
@@ -321,9 +327,6 @@ export default function App() {
         <section className="list-section">
           {filteredItems.length === 0 ? (
             <div className="empty-state">
-              <button className="empty-action" type="submit" form="item-form" aria-label="Přidat položku">
-                +
-              </button>
               <h2>Zatím žádné položky</h2>
             </div>
           ) : (

@@ -1,11 +1,11 @@
 {
-  "name": "Sledování inventáře",
-  "short_name": "Inventář",
-  "description": "Lehká lokální aplikace pro sledování inventáře.",
+  "name": "Klobásovník",
+  "short_name": "Klobásy",
+  "description": "Klobásovník je lokální aplikace pro evidenci zásob v prohlížeči.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#0f172a",
+  "background_color": "#fff7ed",
+  "theme_color": "#7c3aed",
   "icons": [
     {
       "src": "./icons/icon.svg",
