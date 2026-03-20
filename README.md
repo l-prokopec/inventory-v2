@@ -17,24 +17,23 @@ Klobásovník je jednoduchá mobilní webová aplikace pro sdílený rodinný in
 ## Jak to funguje
 
 - frontend běží na GitHub Pages
-- data se nenačítají z `localStorage`
+- inventář se nenačítá z `localStorage`
 - při odemknutí aplikace se inventář načte z jednoho Gistu přes GitHub API
 - při každé změně se celý inventář zapíše zpět do stejného Gistu
+- přístupové údaje ke Gistu se ukládají jen lokálně do prohlížeče na konkrétním zařízení
 
 ## Důležité omezení
 
 Tohle řešení je vhodné jen pro low-risk použití mezi pár lidmi.
 
 - heslo je pouze frontend zámek obrazovky
-- GitHub token je uložený v klientském kódu
-- kdokoliv techničtější si může token nebo heslo z aplikace vytáhnout
+- GitHub token je uložený lokálně v prohlížeči každého člena rodiny, ne v repozitáři
 - při souběžné editaci více lidmi může dojít k přepsání změn
+- pokud někdo smaže data prohlížeče, bude muset nastavení Gistu zadat znovu
 
-Pokud byste časem chtěli skutečné zabezpečení a spolehlivější sdílení, bude potřeba backend nebo spravovaná databázová služba.
+## Jednorázové nastavení na každém zařízení
 
-## Nastavení sdíleného Gistu
-
-1. Na GitHubu vytvořte nový Gist.
+1. Na GitHubu vytvořte nový secret Gist.
 2. Do Gistu vytvořte soubor, například `inventory.json`.
 3. Jako obsah souboru vložte:
 
@@ -42,49 +41,29 @@ Pokud byste časem chtěli skutečné zabezpečení a spolehlivější sdílení
 []
 ```
 
-4. V GitHubu si vytvořte Personal Access Token, který má oprávnění upravovat Gisty.
-5. Otevřete [src/config.js](C:\_DEV\personalProjects\inventory-v2\src\config.js) a doplňte:
-   - `appPassword`
+4. V GitHubu si vytvořte Personal Access Token s oprávněním pro Gists.
+5. Otevřete web aplikace.
+6. Na první obrazovce vyplňte:
+   - heslo aplikace
    - `gistId`
-   - `githubToken`
-   - `gistFilename`
+   - GitHub token
+   - název souboru v Gistu, typicky `inventory.json`
+7. Klikněte na `Uložit nastavení`.
 
-Příklad:
-
-```js
-export const SHARED_INVENTORY_CONFIG = {
-  appPassword: "rodinne-heslo",
-  gistId: "1234567890abcdef1234567890abcdef",
-  githubToken: "github_pat_xxxxxxxxxxxxx",
-  gistFilename: "inventory.json",
-};
-```
-
-Po doplnění těchto hodnot aplikace přestane zobrazovat setup obrazovku a začne pracovat se sdíleným inventářem.
+Toto nastavení je jednorázové pro každý telefon nebo počítač. Inventář samotný zůstává společný.
 
 ## Spuštění lokálně
 
-1. Nainstalujte závislosti:
-
 ```bash
 npm install
-```
-
-2. Spusťte vývojový server:
-
-```bash
 npm run dev
 ```
-
-3. Otevřete URL, které vypíše Vite.
 
 ## Build
 
 ```bash
 npm run build
 ```
-
-Výstup se vygeneruje do složky `dist/`.
 
 ## Nasazení na GitHub Pages
 

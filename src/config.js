@@ -1,17 +1,21 @@
-export const SHARED_INVENTORY_CONFIG = {
-  appPassword: "CHANGE_ME_PASSWORD",
-  gistId: "CHANGE_ME_GIST_ID",
-  githubToken: "CHANGE_ME_GITHUB_TOKEN",
+export const SETTINGS_STORAGE_KEY = "klobasovnik-shared-settings";
+
+export const DEFAULT_SHARED_SETTINGS = {
+  appPassword: "",
+  gistId: "",
+  githubToken: "",
   gistFilename: "inventory.json",
 };
 
-export function isSharedConfigReady() {
-  const { appPassword, gistId, githubToken, gistFilename } = SHARED_INVENTORY_CONFIG;
+export function hasCompleteSharedSettings(settings) {
+  if (!settings || typeof settings !== "object") {
+    return false;
+  }
 
-  return (
-    appPassword !== "CHANGE_ME_PASSWORD" &&
-    gistId !== "CHANGE_ME_GIST_ID" &&
-    githubToken !== "CHANGE_ME_GITHUB_TOKEN" &&
-    Boolean(gistFilename)
+  return Boolean(
+    String(settings.appPassword ?? "").trim() &&
+      String(settings.gistId ?? "").trim() &&
+      String(settings.githubToken ?? "").trim() &&
+      String(settings.gistFilename ?? "").trim(),
   );
 }

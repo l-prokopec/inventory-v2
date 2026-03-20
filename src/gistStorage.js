@@ -1,5 +1,3 @@
-import { SHARED_INVENTORY_CONFIG } from "./config";
-
 function normalizeItems(rawItems) {
   if (!Array.isArray(rawItems)) {
     return [];
@@ -16,22 +14,19 @@ function normalizeItems(rawItems) {
     .filter((item) => item.name);
 }
 
-export async function loadSharedInventory() {
-  const response = await fetch(
-    `https://api.github.com/gists/${SHARED_INVENTORY_CONFIG.gistId}`,
-    {
-      headers: {
-        Accept: "application/vnd.github+json",
-      },
+export async function loadSharedInventory(settings) {
+  const response = await fetch(`https://api.github.com/gists/${settings.gistId}`, {
+    headers: {
+      Accept: "application/vnd.github+json",
     },
-  );
+  });
 
   if (!response.ok) {
     throw new Error("Nepodařilo se načíst sdílený inventář z Gistu.");
   }
 
   const gist = await response.json();
-  const file = gist.files?.[SHARED_INVENTORY_CONFIG.gistFilename];
+  const file = gist.files?.[settings.gistFilename];
 
   if (!file) {
     return [];
@@ -44,25 +39,22 @@ export async function loadSharedInventory() {
   }
 }
 
-export async function saveSharedInventory(items) {
-  const response = await fetch(
-    `https://api.github.com/gists/${SHARED_INVENTORY_CONFIG.gistId}`,
-    {
-      method: "PATCH",
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${SHARED_INVENTORY_CONFIG.githubToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        files: {
-          [SHARED_INVENTORY_CONFIG.gistFilename]: {
-            content: JSON.stringify(items, null, 2),
-          },
-        },
-      }),
+export async function saveSharedInventory(settings, items) {
+  const response = await fetch(`https://api.github.com/gists/${settings.gistId}`, {
+    method: "PATCH",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${settings.githubToken}`,
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({
+      files: {
+        [settings.gistFilename]: {
+          content: JSON.stringify(items, null, 2),
+        },
+      },
+    }),
+  });
 
   if (!response.ok) {
     throw new Error("Nepodařilo se uložit změny do sdíleného inventáře.");

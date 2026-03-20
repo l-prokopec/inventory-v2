@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { SHARED_INVENTORY_CONFIG, isSharedConfigReady } from "./config";
+import {
+  DEFAULT_SHARED_SETTINGS,
+  SETTINGS_STORAGE_KEY,
+  hasCompleteSharedSettings,
+} from "./config";
 import { loadSharedInventory, saveSharedInventory } from "./gistStorage";
 
 const LOW_STOCK_THRESHOLD = 3;
@@ -36,6 +40,36 @@ function sortItems(items, sortBy) {
   }
 }
 
+function readStoredSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+
+    if (!raw) {
+      return { ...DEFAULT_SHARED_SETTINGS };
+    }
+
+    const parsed = JSON.parse(raw);
+
+    return {
+      appPassword: String(parsed.appPassword ?? ""),
+      gistId: String(parsed.gistId ?? ""),
+      githubToken: String(parsed.githubToken ?? ""),
+      gistFilename: String(parsed.gistFilename ?? DEFAULT_SHARED_SETTINGS.gistFilename),
+    };
+  } catch {
+    return { ...DEFAULT_SHARED_SETTINGS };
+  }
+}
+
+function normalizeSettings(settings) {
+  return {
+    appPassword: settings.appPassword.trim(),
+    gistId: settings.gistId.trim(),
+    githubToken: settings.githubToken.trim(),
+    gistFilename: settings.gistFilename.trim() || DEFAULT_SHARED_SETTINGS.gistFilename,
+  };
+}
+
 export default function App() {
   const [items, setItems] = useState([]);
   const [name, setName] = useState("");
@@ -43,6 +77,9 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("quantityDesc");
   const [passwordInput, setPasswordInput] = useState("");
+  const [sharedSettings, setSharedSettings] = useState(() => readStoredSettings());
+  const [settingsForm, setSettingsForm] = useState(() => readStoredSettings());
+  const [isEditingSettings, setIsEditingSettings] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -80,12 +117,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!isUnlocked || !isSharedConfigReady()) {
+    if (!isUnlocked || !hasCompleteSharedSettings(sharedSettings)) {
       return;
     }
 
     refreshInventory();
-  }, [isUnlocked]);
+  }, [isUnlocked, sharedSettings]);
 
   function showFeedback(message) {
     setFeedback(message);
@@ -99,12 +136,46 @@ export default function App() {
     }, 2400);
   }
 
+  function updateSettingsForm(field, value) {
+    setSettingsForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  function handleSaveSettings(event) {
+    event.preventDefault();
+
+    const normalizedSettings = normalizeSettings(settingsForm);
+
+    if (!hasCompleteSharedSettings(normalizedSettings)) {
+      showFeedback("Vyplňte heslo, Gist ID, token i název souboru.");
+      return;
+    }
+
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(normalizedSettings));
+    setSharedSettings(normalizedSettings);
+    setSettingsForm(normalizedSettings);
+    setIsEditingSettings(false);
+    setIsUnlocked(false);
+    setItems([]);
+    setSyncError("");
+    showFeedback("Nastavení bylo uloženo do tohoto zařízení.");
+  }
+
+  function handleOpenSettings() {
+    setSettingsForm(sharedSettings);
+    setPasswordInput("");
+    setIsUnlocked(false);
+    setIsEditingSettings(true);
+  }
+
   async function refreshInventory() {
     setIsLoading(true);
     setSyncError("");
 
     try {
-      const nextItems = await loadSharedInventory();
+      const nextItems = await loadSharedInventory(sharedSettings);
       setItems(nextItems);
     } catch (error) {
       setSyncError(error.message);
@@ -120,7 +191,7 @@ export default function App() {
     setSyncError("");
 
     try {
-      await saveSharedInventory(nextItems);
+      await saveSharedInventory(sharedSettings, nextItems);
 
       if (successMessage) {
         showFeedback(successMessage);
@@ -137,7 +208,7 @@ export default function App() {
   function handleUnlock(event) {
     event.preventDefault();
 
-    if (passwordInput !== SHARED_INVENTORY_CONFIG.appPassword) {
+    if (passwordInput !== sharedSettings.appPassword) {
       showFeedback("Nesprávné heslo.");
       return;
     }
@@ -254,20 +325,74 @@ export default function App() {
     [items],
   );
 
-  if (!isSharedConfigReady()) {
+  if (!hasCompleteSharedSettings(sharedSettings) || isEditingSettings) {
+    const canCancelSetup = hasCompleteSharedSettings(sharedSettings);
+
     return (
       <div className="app-shell">
         <main className="app-card">
           <section className="panel setup-panel">
             <h1>Klobásovník</h1>
             <p className="hero-copy">
-              Nejdřív doplňte <code>appPassword</code>, <code>gistId</code>, <code>githubToken</code> a <code>gistFilename</code> do <code>src/config.js</code>.
+              Nastavení Gistu a hesla se uloží jen do tohoto zařízení. Samotný inventář zůstává sdílený v jednom GitHub Gistu.
             </p>
+            <form className="unlock-form" onSubmit={handleSaveSettings}>
+              <label className="field">
+                <span>Heslo aplikace</span>
+                <input
+                  type="password"
+                  value={settingsForm.appPassword}
+                  onChange={(event) => updateSettingsForm("appPassword", event.target.value)}
+                  placeholder="Rodinné heslo"
+                />
+              </label>
+              <label className="field">
+                <span>Gist ID</span>
+                <input
+                  type="text"
+                  value={settingsForm.gistId}
+                  onChange={(event) => updateSettingsForm("gistId", event.target.value)}
+                  placeholder="Například e44d64a38763760a7e6b2b6f42d4a615"
+                />
+              </label>
+              <label className="field">
+                <span>GitHub token</span>
+                <input
+                  type="password"
+                  value={settingsForm.githubToken}
+                  onChange={(event) => updateSettingsForm("githubToken", event.target.value)}
+                  placeholder="github_pat_..."
+                />
+              </label>
+              <label className="field">
+                <span>Název souboru v Gistu</span>
+                <input
+                  type="text"
+                  value={settingsForm.gistFilename}
+                  onChange={(event) => updateSettingsForm("gistFilename", event.target.value)}
+                  placeholder="inventory.json"
+                />
+              </label>
+              <button className="primary-button" type="submit">
+                Uložit nastavení
+              </button>
+              {canCancelSetup ? (
+                <button className="ghost-button" type="button" onClick={() => setIsEditingSettings(false)}>
+                  Zpět
+                </button>
+              ) : null}
+            </form>
             <p className="setup-note">
-              Tenhle režim je vhodný jen pro malé sdílení mezi pár lidmi. Heslo i token jsou uložené ve frontendu.
+              Token se necommitne do repozitáře. Na každém telefonu nebo počítači ho zadáte jednou.
             </p>
           </section>
         </main>
+
+        {feedback ? (
+          <div className="toast" role="status" aria-live="polite">
+            {feedback}
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -293,6 +418,9 @@ export default function App() {
               </label>
               <button className="primary-button" type="submit">
                 Odemknout inventář
+              </button>
+              <button className="ghost-button" type="button" onClick={handleOpenSettings}>
+                Upravit nastavení Gistu
               </button>
             </form>
           </section>
@@ -329,6 +457,9 @@ export default function App() {
                 disabled={isLoading || isSaving}
               >
                 {isLoading ? "Načítám..." : "Obnovit data"}
+              </button>
+              <button className="ghost-button" type="button" onClick={handleOpenSettings}>
+                Nastavení
               </button>
             </div>
 
