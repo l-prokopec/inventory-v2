@@ -376,9 +376,22 @@ export default function App() {
                 Uložit nastavení
               </button>
               {canCancelSetup ? (
-                <button className="ghost-button" type="button" onClick={() => setIsEditingSettings(false)}>
-                  Zpět
-                </button>
+                <>
+                  <button className="ghost-button" type="button" onClick={() => setIsEditingSettings(false)}>
+                    Zpět
+                  </button>
+                  <button
+                    className="ghost-button"
+                    type="button"
+                    onClick={refreshInventory}
+                    disabled={isLoading || isSaving}
+                  >
+                    {isLoading ? "Načítám..." : "Obnovit data"}
+                  </button>
+                  <button className="ghost-button" type="button" onClick={handleClearSettings}>
+                    Vymazat zařízení
+                  </button>
+                </>
               ) : null}
             </form>
             <p className="setup-note">
@@ -411,19 +424,8 @@ export default function App() {
                   Nainstalovat aplikaci
                 </button>
               ) : null}
-              <button
-                className="ghost-button"
-                type="button"
-                onClick={refreshInventory}
-                disabled={isLoading || isSaving}
-              >
-                {isLoading ? "Načítám..." : "Obnovit data"}
-              </button>
               <button className="ghost-button" type="button" onClick={handleOpenSettings}>
                 Nastavení
-              </button>
-              <button className="ghost-button" type="button" onClick={handleClearSettings}>
-                Vymazat zařízení
               </button>
             </div>
 
