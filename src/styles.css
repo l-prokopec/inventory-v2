@@ -16,20 +16,12 @@
   --surface: rgba(255, 255, 255, 0.78);
   --surface-strong: rgba(255, 255, 255, 0.94);
   --border: rgba(148, 163, 184, 0.24);
-  --border-strong: rgba(99, 102, 241, 0.22);
   --shadow: 0 24px 48px rgba(76, 29, 149, 0.10);
   --primary: #7c3aed;
   --primary-strong: #6d28d9;
-  --secondary: #0ea5e9;
-  --accent: #ec4899;
-  --accent-soft: #fdf2f8;
   --danger: #be123c;
-  --danger-soft: #ffe4e6;
   --text-soft: #475569;
   --text-strong: #10203a;
-  --success-soft: #ecfeff;
-  --warning: #b45309;
-  --warning-bg: #fffbeb;
 }
 
 * {
@@ -48,7 +40,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -162,15 +155,6 @@ button {
   letter-spacing: 0.06em;
 }
 
-.eyebrow {
-  margin: 0 0 0.4rem;
-  color: var(--primary-strong);
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .hero h1,
 .empty-state h2,
 .item-main h2 {
@@ -183,9 +167,7 @@ button {
   color: var(--text-strong);
 }
 
-.hero-copy,
 .meta,
-.empty-state p,
 .item-count {
   margin: 0;
   color: var(--text-soft);
@@ -222,7 +204,8 @@ button {
   font-weight: 700;
 }
 
-.field input {
+.field input,
+.field select {
   width: 100%;
   padding: 0.9rem 0.95rem;
   border: 1px solid rgba(148, 163, 184, 0.35);
@@ -232,7 +215,8 @@ button {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-.field input:focus {
+.field input:focus,
+.field select:focus {
   outline: 3px solid rgba(124, 58, 237, 0.16);
   border-color: rgba(124, 58, 237, 0.46);
 }
@@ -240,7 +224,8 @@ button {
 .primary-button,
 .secondary-button,
 .action-button,
-.delete-button {
+.delete-button,
+.empty-action {
   min-height: 48px;
   border: 0;
   border-radius: 16px;
@@ -255,10 +240,12 @@ button {
 .secondary-button:hover,
 .action-button:hover,
 .delete-button:hover,
+.empty-action:hover,
 .primary-button:focus-visible,
 .secondary-button:focus-visible,
 .action-button:focus-visible,
-.delete-button:focus-visible {
+.delete-button:focus-visible,
+.empty-action:focus-visible {
   transform: translateY(-1px);
 }
 
@@ -408,7 +395,7 @@ button {
     var(--surface);
 }
 
-.empty-icon {
+.empty-action {
   display: inline-grid;
   place-items: center;
   width: 3.5rem;
@@ -455,7 +442,7 @@ button {
   }
 
   .toolbar {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 220px) auto;
     align-items: end;
   }
 

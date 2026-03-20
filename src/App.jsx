@@ -2,6 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const STORAGE_KEY = "inventory-tracker-items";
 const LOW_STOCK_THRESHOLD = 3;
+const SORT_OPTIONS = {
+  newest: "Od nejnovějších",
+  oldest: "Od nejstarších",
+  nameAsc: "Název A-Z",
+  nameDesc: "Název Z-A",
+};
 
 function createItem(name, quantity) {
   return {
@@ -40,18 +46,34 @@ function readStoredItems() {
   }
 }
 
-function sortItems(items) {
-  return [...items].sort(
-    (first, second) =>
-      new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime(),
-  );
+function sortItems(items, sortBy) {
+  const nextItems = [...items];
+
+  switch (sortBy) {
+    case "oldest":
+      return nextItems.sort(
+        (first, second) =>
+          new Date(first.createdAt).getTime() - new Date(second.createdAt).getTime(),
+      );
+    case "nameAsc":
+      return nextItems.sort((first, second) => first.name.localeCompare(second.name, "cs"));
+    case "nameDesc":
+      return nextItems.sort((first, second) => second.name.localeCompare(first.name, "cs"));
+    case "newest":
+    default:
+      return nextItems.sort(
+        (first, second) =>
+          new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime(),
+      );
+  }
 }
 
 export default function App() {
-  const [items, setItems] = useState(() => sortItems(readStoredItems()));
+  const [items, setItems] = useState(() => sortItems(readStoredItems(), "newest"));
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
   const [feedback, setFeedback] = useState("");
   const [installPrompt, setInstallPrompt] = useState(null);
   const feedbackTimeoutRef = useRef(null);
@@ -119,8 +141,7 @@ export default function App() {
       return;
     }
 
-    const nextItems = sortItems([...items, createItem(trimmedName, parsedQuantity)]);
-    setItems(nextItems);
+    setItems((currentItems) => [createItem(trimmedName, parsedQuantity), ...currentItems]);
     setName("");
     setQuantity("1");
     showFeedback(`Položka ${trimmedName} byla přidána.`);
@@ -190,15 +211,12 @@ export default function App() {
 
   const filteredItems = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
+    const visibleItems = normalizedQuery
+      ? items.filter((item) => item.name.toLowerCase().includes(normalizedQuery))
+      : items;
 
-    if (!normalizedQuery) {
-      return items;
-    }
-
-    return items.filter((item) =>
-      item.name.toLowerCase().includes(normalizedQuery),
-    );
-  }, [items, query]);
+    return sortItems(visibleItems, sortBy);
+  }, [items, query, sortBy]);
 
   const totalQuantity = useMemo(
     () => items.reduce((sum, item) => sum + item.quantity, 0),
@@ -215,12 +233,7 @@ export default function App() {
       <main className="app-card">
         <header className="hero">
           <div className="hero-copy-wrap">
-            <p className="eyebrow">Lokální inventář</p>
             <h1>Sledování inventáře</h1>
-            <p className="hero-copy">
-              Rychlý přehled zásob v živějším kabátu. Všechno zůstává uložené jen
-              v tomto prohlížeči.
-            </p>
           </div>
 
           <div className="hero-side">
@@ -248,7 +261,7 @@ export default function App() {
         </header>
 
         <section className="panel panel-strong">
-          <form className="item-form" onSubmit={handleAddItem}>
+          <form id="item-form" className="item-form" onSubmit={handleAddItem}>
             <label className="field">
               <span>Název položky</span>
               <input
@@ -288,6 +301,18 @@ export default function App() {
               placeholder="Filtrovat položky"
             />
           </label>
+
+          <label className="field sort-field">
+            <span>Řazení</span>
+            <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+              {Object.entries(SORT_OPTIONS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <p className="item-count">
             Zobrazeno {filteredItems.length} {filteredItems.length === 1 ? "položka" : "položek"}
           </p>
@@ -296,12 +321,10 @@ export default function App() {
         <section className="list-section">
           {filteredItems.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">+</div>
+              <button className="empty-action" type="submit" form="item-form" aria-label="Přidat položku">
+                +
+              </button>
               <h2>Zatím žádné položky</h2>
-              <p>
-                Přidejte svou první položku výše. Inventář se ukládá do localStorage
-                jen na tomto zařízení.
-              </p>
             </div>
           ) : (
             <ul className="item-list">
