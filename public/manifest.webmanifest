@@ -1,7 +1,7 @@
 {
   "name": "Klobásovník",
   "short_name": "Klobásy",
-  "description": "Klobásovník je lokální aplikace pro evidenci zásob v prohlížeči.",
+  "description": "Klobásovník je jednoduchá sdílená evidence zásob přes GitHub Gist.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#fff7ed",

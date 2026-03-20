@@ -1,26 +1,111 @@
-# Inventory Tracker
+# Klobásovník
 
-A lightweight mobile-first inventory tracking web app built with React and Vite. Each browser stores its own inventory in `localStorage`, so there is no backend, no login, and no shared database.
+Klobásovník je jednoduchá mobilní webová aplikace pro sdílený rodinný inventář. Běží čistě jako statický frontend na GitHub Pages a položky ukládá do jednoho JSON souboru v GitHub Gistu.
 
-## What the app does
+## Co aplikace umí
 
-- Add inventory items with a name and initial quantity
-- Increase or decrease item quantities
-- Confirm before deleting an item
-- Confirm before removing an item when decreasing from `1` to `0`
-- Persist data locally in the browser after refresh
-- Filter items with a simple search field
-- Highlight low-stock items
-- Offer browser install support through a web app manifest and install prompt where supported
+- přidat položku s názvem a počátečním množstvím
+- zvýšit nebo snížit množství položky
+- potvrdit smazání položky
+- potvrdit odstranění položky při snížení z `1` na `0`
+- filtrovat položky
+- řadit podle názvu nebo množství
+- zvýraznit nízký stav
+- sdílet jeden inventář mezi více lidmi přes GitHub Gist
+- zamknout zobrazení jednoduchým frontend heslem
 
-## Tech stack
+## Jak to funguje
 
-- React
-- Vite
-- Browser `localStorage`
-- Static deployment via GitHub Pages
+- frontend běží na GitHub Pages
+- data se nenačítají z `localStorage`
+- při odemknutí aplikace se inventář načte z jednoho Gistu přes GitHub API
+- při každé změně se celý inventář zapíše zpět do stejného Gistu
 
-## Project structure
+## Důležité omezení
+
+Tohle řešení je vhodné jen pro low-risk použití mezi pár lidmi.
+
+- heslo je pouze frontend zámek obrazovky
+- GitHub token je uložený v klientském kódu
+- kdokoliv techničtější si může token nebo heslo z aplikace vytáhnout
+- při souběžné editaci více lidmi může dojít k přepsání změn
+
+Pokud byste časem chtěli skutečné zabezpečení a spolehlivější sdílení, bude potřeba backend nebo spravovaná databázová služba.
+
+## Nastavení sdíleného Gistu
+
+1. Na GitHubu vytvořte nový Gist.
+2. Do Gistu vytvořte soubor, například `inventory.json`.
+3. Jako obsah souboru vložte:
+
+```json
+[]
+```
+
+4. V GitHubu si vytvořte Personal Access Token, který má oprávnění upravovat Gisty.
+5. Otevřete [src/config.js](C:\_DEV\personalProjects\inventory-v2\src\config.js) a doplňte:
+   - `appPassword`
+   - `gistId`
+   - `githubToken`
+   - `gistFilename`
+
+Příklad:
+
+```js
+export const SHARED_INVENTORY_CONFIG = {
+  appPassword: "rodinne-heslo",
+  gistId: "1234567890abcdef1234567890abcdef",
+  githubToken: "github_pat_xxxxxxxxxxxxx",
+  gistFilename: "inventory.json",
+};
+```
+
+Po doplnění těchto hodnot aplikace přestane zobrazovat setup obrazovku a začne pracovat se sdíleným inventářem.
+
+## Spuštění lokálně
+
+1. Nainstalujte závislosti:
+
+```bash
+npm install
+```
+
+2. Spusťte vývojový server:
+
+```bash
+npm run dev
+```
+
+3. Otevřete URL, které vypíše Vite.
+
+## Build
+
+```bash
+npm run build
+```
+
+Výstup se vygeneruje do složky `dist/`.
+
+## Nasazení na GitHub Pages
+
+Repo obsahuje workflow v [deploy.yml](C:\_DEV\personalProjects\inventory-v2\.github\workflows\deploy.yml).
+
+1. Pushněte projekt do GitHub repozitáře.
+2. V GitHubu otevřete `Settings > Pages`.
+3. Jako `Source` nastavte `GitHub Actions`.
+4. Pushněte změny do větve `master`.
+5. Workflow projekt postaví a zveřejní na GitHub Pages.
+
+## Chování inventáře
+
+- názvy položek se před uložením ořezávají
+- prázdný název není povolen
+- množství nesmí klesnout pod `0`
+- při snížení z `1` na `0` aplikace požádá o potvrzení odstranění
+- tlačítko `Smazat` vždy vyžaduje potvrzení
+- toast upozornění se zobrazuje jen po vytvoření a smazání položky nebo při chybě
+
+## Struktura projektu
 
 ```text
 inventory-v2/
@@ -29,101 +114,16 @@ inventory-v2/
 |       `-- deploy.yml
 |-- public/
 |   |-- icons/
-|   |   |-- apple-touch-icon.svg
-|   |   |-- icon.svg
-|   |   `-- maskable-icon.svg
 |   |-- manifest.webmanifest
 |   `-- sw.js
 |-- src/
 |   |-- App.jsx
+|   |-- config.js
+|   |-- gistStorage.js
 |   |-- main.jsx
 |   `-- styles.css
-|-- .gitignore
 |-- index.html
 |-- package.json
 |-- README.md
 `-- vite.config.js
 ```
-
-## Run locally
-
-1. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-2. Start the development server:
-
-   ```bash
-   npm run dev
-   ```
-
-3. Open the local URL shown by Vite in your browser.
-
-## Build for production
-
-```bash
-npm run build
-```
-
-The production files are generated in the `dist/` folder.
-
-## Deploy to GitHub Pages
-
-This repository includes a GitHub Actions workflow in `.github/workflows/deploy.yml`.
-
-1. Push the project to a GitHub repository.
-2. In GitHub, open `Settings > Pages`.
-3. Under `Build and deployment`, set `Source` to `GitHub Actions`.
-4. Push to the `master` branch, or run the workflow manually from the `Actions` tab.
-5. GitHub will publish the `dist/` output to GitHub Pages.
-
-### Why `base: "./"` is used
-
-Vite is configured with a relative asset base in `vite.config.js`. This helps the static build work correctly on GitHub Pages project URLs such as:
-
-`https://your-user-name.github.io/your-repo-name/`
-
-## How localStorage is used
-
-- Inventory items are stored under the `localStorage` key `inventory-tracker-items`
-- Each item includes:
-  - `id`
-  - `name`
-  - `quantity`
-  - `createdAt`
-- Data is written back to `localStorage` whenever the inventory changes
-- Data is read from `localStorage` when the app loads
-
-## Local-only storage limitations
-
-- Data stays only in the current browser profile on the current device
-- Clearing browser storage will remove the inventory
-- Data does not sync across devices or browsers
-- Reinstalling the browser or using private browsing may remove stored data
-- There is no account recovery because there are no user accounts
-
-## Installability notes
-
-- The app includes a web app manifest
-- A minimal service worker is included to improve installability support in compatible browsers
-- Browsers decide when and whether to show an install prompt
-- On iPhone and iPad, users may need to use the browser share menu and choose `Add to Home Screen`
-
-## Inventory behavior
-
-- Item names are trimmed before saving
-- Empty names are rejected
-- Initial quantity must be at least `1`
-- Quantity never goes below `0`
-- Items are sorted by newest first
-- Decreasing an item from `1` confirms removal before deleting it
-- Clicking `Delete` always asks for confirmation
-
-## Notes for beginners
-
-- All app state lives in `src/App.jsx`
-- Styling is in `src/styles.css`
-- Static PWA files live in `public/`
-- No backend or server code is used anywhere in this project

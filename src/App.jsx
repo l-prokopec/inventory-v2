@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { SHARED_INVENTORY_CONFIG, isSharedConfigReady } from "./config";
+import { loadSharedInventory, saveSharedInventory } from "./gistStorage";
 
-const STORAGE_KEY = "inventory-tracker-items";
 const LOW_STOCK_THRESHOLD = 3;
 const SORT_OPTIONS = {
   quantityDesc: "Množství od nejvyššího",
@@ -16,34 +17,6 @@ function createItem(name, quantity) {
     quantity,
     createdAt: new Date().toISOString(),
   };
-}
-
-function readStoredItems() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-
-    if (!raw) {
-      return [];
-    }
-
-    const parsed = JSON.parse(raw);
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed
-      .filter((item) => item && typeof item === "object")
-      .map((item) => ({
-        id: String(item.id ?? crypto.randomUUID()),
-        name: String(item.name ?? "").trim(),
-        quantity: Math.max(0, Number(item.quantity) || 0),
-        createdAt: item.createdAt ?? new Date().toISOString(),
-      }))
-      .filter((item) => item.name);
-  } catch {
-    return [];
-  }
 }
 
 function sortItems(items, sortBy) {
@@ -64,18 +37,19 @@ function sortItems(items, sortBy) {
 }
 
 export default function App() {
-  const [items, setItems] = useState(() => readStoredItems());
+  const [items, setItems] = useState([]);
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("quantityDesc");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [syncError, setSyncError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [installPrompt, setInstallPrompt] = useState(null);
   const feedbackTimeoutRef = useRef(null);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
 
   useEffect(() => {
     function handleBeforeInstallPrompt(event) {
@@ -92,10 +66,7 @@ export default function App() {
     window.addEventListener("appinstalled", handleInstalled);
 
     return () => {
-      window.removeEventListener(
-        "beforeinstallprompt",
-        handleBeforeInstallPrompt,
-      );
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleInstalled);
     };
   }, []);
@@ -107,6 +78,14 @@ export default function App() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!isUnlocked || !isSharedConfigReady()) {
+      return;
+    }
+
+    refreshInventory();
+  }, [isUnlocked]);
 
   function showFeedback(message) {
     setFeedback(message);
@@ -120,7 +99,54 @@ export default function App() {
     }, 2400);
   }
 
-  function handleAddItem(event) {
+  async function refreshInventory() {
+    setIsLoading(true);
+    setSyncError("");
+
+    try {
+      const nextItems = await loadSharedInventory();
+      setItems(nextItems);
+    } catch (error) {
+      setSyncError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function persistItems(nextItems, successMessage) {
+    const previousItems = items;
+    setItems(nextItems);
+    setIsSaving(true);
+    setSyncError("");
+
+    try {
+      await saveSharedInventory(nextItems);
+
+      if (successMessage) {
+        showFeedback(successMessage);
+      }
+    } catch (error) {
+      setItems(previousItems);
+      setSyncError(error.message);
+      showFeedback("Změnu se nepodařilo uložit.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function handleUnlock(event) {
+    event.preventDefault();
+
+    if (passwordInput !== SHARED_INVENTORY_CONFIG.appPassword) {
+      showFeedback("Nesprávné heslo.");
+      return;
+    }
+
+    setIsUnlocked(true);
+    setPasswordInput("");
+  }
+
+  async function handleAddItem(event) {
     event.preventDefault();
 
     const trimmedName = name.trim();
@@ -136,13 +162,13 @@ export default function App() {
       return;
     }
 
-    setItems((currentItems) => [createItem(trimmedName, parsedQuantity), ...currentItems]);
+    const nextItems = [createItem(trimmedName, parsedQuantity), ...items];
     setName("");
     setQuantity("1");
-    showFeedback(`Položka ${trimmedName} byla přidána.`);
+    await persistItems(nextItems, `Položka ${trimmedName} byla přidána.`);
   }
 
-  function updateQuantity(id, change) {
+  async function updateQuantity(id, change) {
     const currentItem = items.find((item) => item.id === id);
 
     if (!currentItem) {
@@ -158,21 +184,24 @@ export default function App() {
         return;
       }
 
-      setItems(items.filter((item) => item.id !== id));
-      showFeedback(`Položka ${currentItem.name} byla odstraněna.`);
+      await persistItems(
+        items.filter((item) => item.id !== id),
+        `Položka ${currentItem.name} byla odstraněna.`,
+      );
       return;
     }
 
-    setItems(
+    await persistItems(
       items.map((item) =>
         item.id === id
           ? { ...item, quantity: Math.max(0, item.quantity + change) }
           : item,
       ),
+      "",
     );
   }
 
-  function handleDelete(id) {
+  async function handleDelete(id) {
     const currentItem = items.find((item) => item.id === id);
 
     if (!currentItem) {
@@ -185,8 +214,10 @@ export default function App() {
       return;
     }
 
-    setItems(items.filter((item) => item.id !== id));
-    showFeedback(`Položka ${currentItem.name} byla smazána.`);
+    await persistItems(
+      items.filter((item) => item.id !== id),
+      `Položka ${currentItem.name} byla smazána.`,
+    );
   }
 
   async function handleInstall() {
@@ -223,6 +254,59 @@ export default function App() {
     [items],
   );
 
+  if (!isSharedConfigReady()) {
+    return (
+      <div className="app-shell">
+        <main className="app-card">
+          <section className="panel setup-panel">
+            <h1>Klobásovník</h1>
+            <p className="hero-copy">
+              Nejdřív doplňte <code>appPassword</code>, <code>gistId</code>, <code>githubToken</code> a <code>gistFilename</code> do <code>src/config.js</code>.
+            </p>
+            <p className="setup-note">
+              Tenhle režim je vhodný jen pro malé sdílení mezi pár lidmi. Heslo i token jsou uložené ve frontendu.
+            </p>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (!isUnlocked) {
+    return (
+      <div className="app-shell">
+        <main className="app-card">
+          <section className="panel setup-panel">
+            <h1>Klobásovník</h1>
+            <p className="hero-copy">
+              Sdílený inventář je zamčený jednoduchým frontend heslem.
+            </p>
+            <form className="unlock-form" onSubmit={handleUnlock}>
+              <label className="field">
+                <span>Heslo</span>
+                <input
+                  type="password"
+                  value={passwordInput}
+                  onChange={(event) => setPasswordInput(event.target.value)}
+                  placeholder="Zadejte heslo"
+                />
+              </label>
+              <button className="primary-button" type="submit">
+                Odemknout inventář
+              </button>
+            </form>
+          </section>
+        </main>
+
+        {feedback ? (
+          <div className="toast" role="status" aria-live="polite">
+            {feedback}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell">
       <main className="app-card">
@@ -232,11 +316,21 @@ export default function App() {
           </div>
 
           <div className="hero-side">
-            {installPrompt ? (
-              <button className="secondary-button" type="button" onClick={handleInstall}>
-                Nainstalovat aplikaci
+            <div className="hero-actions">
+              {installPrompt ? (
+                <button className="secondary-button" type="button" onClick={handleInstall}>
+                  Nainstalovat aplikaci
+                </button>
+              ) : null}
+              <button
+                className="ghost-button"
+                type="button"
+                onClick={refreshInventory}
+                disabled={isLoading || isSaving}
+              >
+                {isLoading ? "Načítám..." : "Obnovit data"}
               </button>
-            ) : null}
+            </div>
 
             <div className="hero-stats" aria-label="Souhrn inventáře">
               <article className="stat-card stat-card-blue">
@@ -254,6 +348,13 @@ export default function App() {
             </div>
           </div>
         </header>
+
+        {syncError ? (
+          <div className="panel sync-banner">
+            <strong>Synchronizace selhala.</strong>
+            <span>{syncError}</span>
+          </div>
+        ) : null}
 
         <section className="panel panel-strong">
           <form id="item-form" className="item-form" onSubmit={handleAddItem}>
@@ -280,8 +381,8 @@ export default function App() {
               />
             </label>
 
-            <button className="primary-button" type="submit">
-              Přidat položku
+            <button className="primary-button" type="submit" disabled={isSaving || isLoading}>
+              {isSaving ? "Ukládám..." : "Přidat položku"}
             </button>
           </form>
         </section>
@@ -314,7 +415,11 @@ export default function App() {
         </section>
 
         <section className="list-section">
-          {filteredItems.length === 0 ? (
+          {isLoading ? (
+            <div className="empty-state">
+              <h2>Načítám sdílený inventář...</h2>
+            </div>
+          ) : filteredItems.length === 0 ? (
             <div className="empty-state">
               <h2>Zatím žádné položky</h2>
             </div>
@@ -351,6 +456,7 @@ export default function App() {
                         type="button"
                         onClick={() => updateQuantity(item.id, -1)}
                         aria-label={`Snížit množství položky ${item.name}`}
+                        disabled={isSaving}
                       >
                         -
                       </button>
@@ -359,6 +465,7 @@ export default function App() {
                         type="button"
                         onClick={() => updateQuantity(item.id, 1)}
                         aria-label={`Zvýšit množství položky ${item.name}`}
+                        disabled={isSaving}
                       >
                         +
                       </button>
@@ -366,6 +473,7 @@ export default function App() {
                         className="delete-button"
                         type="button"
                         onClick={() => handleDelete(item.id)}
+                        disabled={isSaving}
                       >
                         Smazat
                       </button>
