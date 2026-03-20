@@ -332,9 +332,6 @@ export default function App() {
         <main className="app-card">
           <section className="panel setup-panel">
             <h1>Klobásovník</h1>
-            <p className="hero-copy">
-              Nastavení Gistu a hesla se uloží jen do tohoto zařízení. Samotný inventář zůstává sdílený v jednom GitHub Gistu.
-            </p>
             <form className="unlock-form" onSubmit={handleSaveSettings}>
               <label className="field">
                 <span>Heslo aplikace</span>
@@ -394,9 +391,6 @@ export default function App() {
                 </>
               ) : null}
             </form>
-            <p className="setup-note">
-              Token se necommitne do repozitáře. Na každém telefonu nebo počítači ho zadáte jen jednou.
-            </p>
           </section>
         </main>
 
