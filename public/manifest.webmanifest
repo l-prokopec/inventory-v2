@@ -1,7 +1,7 @@
 {
-  "name": "Inventory Tracker",
-  "short_name": "Inventory",
-  "description": "A lightweight local-only inventory tracker.",
+  "name": "Sledování inventáøe",
+  "short_name": "Inventáø",
+  "description": "Lehká lokální aplikace pro sledování inventáøe.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f8fafc",

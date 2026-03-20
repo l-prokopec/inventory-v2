@@ -68,7 +68,7 @@ export default function App() {
 
     function handleInstalled() {
       setInstallPrompt(null);
-      showFeedback("App installed.");
+      showFeedback("Aplikace byla nainstalována.");
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -110,12 +110,12 @@ export default function App() {
     const parsedQuantity = Math.max(0, Number.parseInt(quantity, 10) || 0);
 
     if (!trimmedName) {
-      showFeedback("Enter an item name.");
+      showFeedback("Zadejte název položky.");
       return;
     }
 
     if (parsedQuantity < 1) {
-      showFeedback("Initial quantity must be at least 1.");
+      showFeedback("Poèáteèní množství musí být alespoò 1.");
       return;
     }
 
@@ -123,7 +123,7 @@ export default function App() {
     setItems(nextItems);
     setName("");
     setQuantity("1");
-    showFeedback(`Added ${trimmedName}.`);
+    showFeedback(`Položka ${trimmedName} byla pøidána.`);
   }
 
   function updateQuantity(id, change) {
@@ -135,7 +135,7 @@ export default function App() {
 
     if (change < 0 && currentItem.quantity === 1) {
       const confirmed = window.confirm(
-        `Remove ${currentItem.name}? Its quantity would reach 0.`,
+        `Opravdu odstranit položku ${currentItem.name}? Množství by kleslo na 0.`,
       );
 
       if (!confirmed) {
@@ -143,7 +143,7 @@ export default function App() {
       }
 
       setItems(items.filter((item) => item.id !== id));
-      showFeedback(`Removed ${currentItem.name}.`);
+      showFeedback(`Položka ${currentItem.name} byla odstranìna.`);
       return;
     }
 
@@ -156,7 +156,9 @@ export default function App() {
     );
 
     showFeedback(
-      change > 0 ? `Increased ${currentItem.name}.` : `Decreased ${currentItem.name}.`,
+      change > 0
+        ? `Množství položky ${currentItem.name} bylo zvýšeno.`
+        : `Množství položky ${currentItem.name} bylo sníženo.`,
     );
   }
 
@@ -167,14 +169,14 @@ export default function App() {
       return;
     }
 
-    const confirmed = window.confirm(`Delete ${currentItem.name}?`);
+    const confirmed = window.confirm(`Opravdu smazat položku ${currentItem.name}?`);
 
     if (!confirmed) {
       return;
     }
 
     setItems(items.filter((item) => item.id !== id));
-    showFeedback(`Deleted ${currentItem.name}.`);
+    showFeedback(`Položka ${currentItem.name} byla smazána.`);
   }
 
   async function handleInstall() {
@@ -186,7 +188,7 @@ export default function App() {
     const result = await installPrompt.userChoice;
 
     if (result.outcome !== "accepted") {
-      showFeedback("Install dismissed.");
+      showFeedback("Instalace byla zrušena.");
     }
 
     setInstallPrompt(null);
@@ -209,17 +211,17 @@ export default function App() {
       <main className="app-card">
         <header className="hero">
           <div>
-            <p className="eyebrow">Local inventory</p>
-            <h1>Inventory Tracker</h1>
+            <p className="eyebrow">Lokální inventáø</p>
+            <h1>Sledování inventáøe</h1>
             <p className="hero-copy">
-              Track quantities on this device only. Data is stored in your browser
-              and stays private to this browser profile.
+              Sledujte množství jen v tomto zaøízení. Data jsou uložena v prohlížeèi
+              a zùstávají pouze v tomto profilu.
             </p>
           </div>
 
           {installPrompt ? (
             <button className="secondary-button" type="button" onClick={handleInstall}>
-              Install app
+              Nainstalovat aplikaci
             </button>
           ) : null}
         </header>
@@ -227,18 +229,18 @@ export default function App() {
         <section className="panel">
           <form className="item-form" onSubmit={handleAddItem}>
             <label className="field">
-              <span>Item name</span>
+              <span>Název položky</span>
               <input
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Coffee beans"
+                placeholder="Kávová zrna"
                 maxLength={80}
               />
             </label>
 
             <label className="field quantity-field">
-              <span>Initial quantity</span>
+              <span>Poèáteèní množství</span>
               <input
                 type="number"
                 inputMode="numeric"
@@ -250,33 +252,34 @@ export default function App() {
             </label>
 
             <button className="primary-button" type="submit">
-              Add item
+              Pøidat položku
             </button>
           </form>
         </section>
 
         <section className="panel toolbar">
           <label className="field search-field">
-            <span>Search</span>
+            <span>Hledat</span>
             <input
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Filter items"
+              placeholder="Filtrovat položky"
             />
           </label>
           <p className="item-count">
-            {filteredItems.length} {filteredItems.length === 1 ? "item" : "items"}
+            {filteredItems.length}{" "}
+            {filteredItems.length === 1 ? "položka" : "položek"}
           </p>
         </section>
 
         <section className="list-section">
           {filteredItems.length === 0 ? (
             <div className="empty-state">
-              <h2>No items yet</h2>
+              <h2>Zatím žádné položky</h2>
               <p>
-                Add your first inventory item above. Everything stays in localStorage
-                on this device.
+                Pøidejte svou první položku výše. Vše zùstává uložené v localStorage
+                na tomto zaøízení.
               </p>
             </div>
           ) : (
@@ -292,11 +295,11 @@ export default function App() {
                     <div>
                       <h2>{item.name}</h2>
                       <p className="meta">
-                        Added {new Date(item.createdAt).toLocaleDateString()}
+                        Pøidáno {new Date(item.createdAt).toLocaleDateString("cs-CZ")}
                       </p>
                     </div>
 
-                    <div className="quantity-badge" aria-label={`Quantity ${item.quantity}`}>
+                    <div className="quantity-badge" aria-label={`Množství ${item.quantity}`}>
                       {item.quantity}
                     </div>
                   </div>
@@ -306,7 +309,7 @@ export default function App() {
                       className="action-button"
                       type="button"
                       onClick={() => updateQuantity(item.id, -1)}
-                      aria-label={`Decrease ${item.name}`}
+                      aria-label={`Snížit množství položky ${item.name}`}
                     >
                       -
                     </button>
@@ -314,7 +317,7 @@ export default function App() {
                       className="action-button"
                       type="button"
                       onClick={() => updateQuantity(item.id, 1)}
-                      aria-label={`Increase ${item.name}`}
+                      aria-label={`Zvýšit množství položky ${item.name}`}
                     >
                       +
                     </button>
@@ -323,7 +326,7 @@ export default function App() {
                       type="button"
                       onClick={() => handleDelete(item.id)}
                     >
-                      Delete
+                      Smazat
                     </button>
                   </div>
                 </li>
