@@ -76,11 +76,9 @@ export default function App() {
   const [quantity, setQuantity] = useState("1");
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("quantityDesc");
-  const [passwordInput, setPasswordInput] = useState("");
   const [sharedSettings, setSharedSettings] = useState(() => readStoredSettings());
   const [settingsForm, setSettingsForm] = useState(() => readStoredSettings());
   const [isEditingSettings, setIsEditingSettings] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [syncError, setSyncError] = useState("");
@@ -117,12 +115,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!isUnlocked || !hasCompleteSharedSettings(sharedSettings)) {
+    if (!hasCompleteSharedSettings(sharedSettings) || isEditingSettings) {
       return;
     }
 
     refreshInventory();
-  }, [isUnlocked, sharedSettings]);
+  }, [sharedSettings, isEditingSettings]);
 
   function showFeedback(message) {
     setFeedback(message);
@@ -157,7 +155,6 @@ export default function App() {
     setSharedSettings(normalizedSettings);
     setSettingsForm(normalizedSettings);
     setIsEditingSettings(false);
-    setIsUnlocked(false);
     setItems([]);
     setSyncError("");
     showFeedback("Nastavení bylo uloženo do tohoto zařízení.");
@@ -165,9 +162,23 @@ export default function App() {
 
   function handleOpenSettings() {
     setSettingsForm(sharedSettings);
-    setPasswordInput("");
-    setIsUnlocked(false);
     setIsEditingSettings(true);
+  }
+
+  function handleClearSettings() {
+    const confirmed = window.confirm("Opravdu vymazat uložené nastavení tohoto zařízení?");
+
+    if (!confirmed) {
+      return;
+    }
+
+    localStorage.removeItem(SETTINGS_STORAGE_KEY);
+    setSharedSettings({ ...DEFAULT_SHARED_SETTINGS });
+    setSettingsForm({ ...DEFAULT_SHARED_SETTINGS });
+    setItems([]);
+    setSyncError("");
+    setIsEditingSettings(false);
+    showFeedback("Lokální nastavení bylo smazáno.");
   }
 
   async function refreshInventory() {
@@ -203,18 +214,6 @@ export default function App() {
     } finally {
       setIsSaving(false);
     }
-  }
-
-  function handleUnlock(event) {
-    event.preventDefault();
-
-    if (passwordInput !== sharedSettings.appPassword) {
-      showFeedback("Nesprávné heslo.");
-      return;
-    }
-
-    setIsUnlocked(true);
-    setPasswordInput("");
   }
 
   async function handleAddItem(event) {
@@ -383,46 +382,8 @@ export default function App() {
               ) : null}
             </form>
             <p className="setup-note">
-              Token se necommitne do repozitáře. Na každém telefonu nebo počítači ho zadáte jednou.
+              Token se necommitne do repozitáře. Na každém telefonu nebo počítači ho zadáte jen jednou.
             </p>
-          </section>
-        </main>
-
-        {feedback ? (
-          <div className="toast" role="status" aria-live="polite">
-            {feedback}
-          </div>
-        ) : null}
-      </div>
-    );
-  }
-
-  if (!isUnlocked) {
-    return (
-      <div className="app-shell">
-        <main className="app-card">
-          <section className="panel setup-panel">
-            <h1>Klobásovník</h1>
-            <p className="hero-copy">
-              Sdílený inventář je zamčený jednoduchým frontend heslem.
-            </p>
-            <form className="unlock-form" onSubmit={handleUnlock}>
-              <label className="field">
-                <span>Heslo</span>
-                <input
-                  type="password"
-                  value={passwordInput}
-                  onChange={(event) => setPasswordInput(event.target.value)}
-                  placeholder="Zadejte heslo"
-                />
-              </label>
-              <button className="primary-button" type="submit">
-                Odemknout inventář
-              </button>
-              <button className="ghost-button" type="button" onClick={handleOpenSettings}>
-                Upravit nastavení Gistu
-              </button>
-            </form>
           </section>
         </main>
 
@@ -460,6 +421,9 @@ export default function App() {
               </button>
               <button className="ghost-button" type="button" onClick={handleOpenSettings}>
                 Nastavení
+              </button>
+              <button className="ghost-button" type="button" onClick={handleClearSettings}>
+                Vymazat zařízení
               </button>
             </div>
 

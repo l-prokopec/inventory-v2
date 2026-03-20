@@ -12,21 +12,22 @@ Klobásovník je jednoduchá mobilní webová aplikace pro sdílený rodinný in
 - řadit podle názvu nebo množství
 - zvýraznit nízký stav
 - sdílet jeden inventář mezi více lidmi přes GitHub Gist
-- zamknout zobrazení jednoduchým frontend heslem
+- jednorázově uložit lokální nastavení zařízení
 
 ## Jak to funguje
 
 - frontend běží na GitHub Pages
 - inventář se nenačítá z `localStorage`
-- při odemknutí aplikace se inventář načte z jednoho Gistu přes GitHub API
+- při otevření aplikace se inventář načte z jednoho Gistu přes GitHub API
 - při každé změně se celý inventář zapíše zpět do stejného Gistu
 - přístupové údaje ke Gistu se ukládají jen lokálně do prohlížeče na konkrétním zařízení
+- po prvním nastavení už aplikace na tom zařízení nechce heslo znovu
 
 ## Důležité omezení
 
 Tohle řešení je vhodné jen pro low-risk použití mezi pár lidmi.
 
-- heslo je pouze frontend zámek obrazovky
+- heslo je jen součást lokálního nastavení zařízení
 - GitHub token je uložený lokálně v prohlížeči každého člena rodiny, ne v repozitáři
 - při souběžné editaci více lidmi může dojít k přepsání změn
 - pokud někdo smaže data prohlížeče, bude muset nastavení Gistu zadat znovu
@@ -50,7 +51,11 @@ Tohle řešení je vhodné jen pro low-risk použití mezi pár lidmi.
    - název souboru v Gistu, typicky `inventory.json`
 7. Klikněte na `Uložit nastavení`.
 
-Toto nastavení je jednorázové pro každý telefon nebo počítač. Inventář samotný zůstává společný.
+Toto nastavení je jednorázové pro každý telefon nebo počítač. Při dalších otevřeních už se aplikace na tom zařízení otevře rovnou.
+
+## Reset zařízení
+
+Pokud budete chtít změnit token nebo zařízení odpojit, použijte v aplikaci tlačítko `Vymazat zařízení`. Tím se smaže jen lokální nastavení v daném prohlížeči, ne samotný sdílený inventář v Gistu.
 
 ## Spuštění lokálně
 
