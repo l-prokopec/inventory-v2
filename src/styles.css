@@ -122,16 +122,24 @@ button {
 }
 
 .stat-card {
+  display: grid;
+  grid-template-rows: minmax(2.3rem, auto) 1fr;
+  align-items: stretch;
+  min-height: 6.3rem;
   padding: 0.85rem 0.8rem;
   border-radius: 18px;
   color: #fff;
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+  text-align: center;
 }
 
 .stat-card strong {
-  display: block;
-  margin-top: 0.2rem;
-  font-size: 1.25rem;
+  display: grid;
+  align-items: center;
+  min-height: 2.2rem;
+  margin: 0;
+  font-size: 1.45rem;
+  line-height: 1;
 }
 
 .stat-card-blue {
@@ -147,8 +155,10 @@ button {
 }
 
 .stat-label {
-  display: block;
+  display: grid;
+  align-items: center;
   font-size: 0.76rem;
+  line-height: 1.15;
   opacity: 0.92;
   text-transform: uppercase;
   letter-spacing: 0.06em;
