@@ -68,7 +68,7 @@ export default function App() {
 
     function handleInstalled() {
       setInstallPrompt(null);
-      showFeedback("Aplikace byla nainstalov·na.");
+      showFeedback("Aplikace byla nainstalov√°na.");
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -110,12 +110,12 @@ export default function App() {
     const parsedQuantity = Math.max(0, Number.parseInt(quantity, 10) || 0);
 
     if (!trimmedName) {
-      showFeedback("Zadejte n·zev poloûky.");
+      showFeedback("Zadejte n√°zev polo≈æky.");
       return;
     }
 
     if (parsedQuantity < 1) {
-      showFeedback("PoË·teËnÌ mnoûstvÌ musÌ b˝t alespoÚ 1.");
+      showFeedback("Poƒç√°teƒçn√≠ mno≈æstv√≠ mus√≠ b√Ωt alespo≈à 1.");
       return;
     }
 
@@ -123,7 +123,7 @@ export default function App() {
     setItems(nextItems);
     setName("");
     setQuantity("1");
-    showFeedback(`Poloûka ${trimmedName} byla p¯id·na.`);
+    showFeedback(`Polo≈æka ${trimmedName} byla p≈ôid√°na.`);
   }
 
   function updateQuantity(id, change) {
@@ -135,7 +135,7 @@ export default function App() {
 
     if (change < 0 && currentItem.quantity === 1) {
       const confirmed = window.confirm(
-        `Opravdu odstranit poloûku ${currentItem.name}? MnoûstvÌ by kleslo na 0.`,
+        `Opravdu odstranit polo≈æku ${currentItem.name}? Mno≈æstv√≠ by kleslo na 0.`,
       );
 
       if (!confirmed) {
@@ -143,7 +143,7 @@ export default function App() {
       }
 
       setItems(items.filter((item) => item.id !== id));
-      showFeedback(`Poloûka ${currentItem.name} byla odstranÏna.`);
+      showFeedback(`Polo≈æka ${currentItem.name} byla odstranƒõna.`);
       return;
     }
 
@@ -157,8 +157,8 @@ export default function App() {
 
     showFeedback(
       change > 0
-        ? `MnoûstvÌ poloûky ${currentItem.name} bylo zv˝öeno.`
-        : `MnoûstvÌ poloûky ${currentItem.name} bylo snÌûeno.`,
+        ? `Mno≈æstv√≠ polo≈æky ${currentItem.name} bylo zv√Ω≈°eno.`
+        : `Mno≈æstv√≠ polo≈æky ${currentItem.name} bylo sn√≠≈æeno.`,
     );
   }
 
@@ -169,14 +169,14 @@ export default function App() {
       return;
     }
 
-    const confirmed = window.confirm(`Opravdu smazat poloûku ${currentItem.name}?`);
+    const confirmed = window.confirm(`Opravdu smazat polo≈æku ${currentItem.name}?`);
 
     if (!confirmed) {
       return;
     }
 
     setItems(items.filter((item) => item.id !== id));
-    showFeedback(`Poloûka ${currentItem.name} byla smaz·na.`);
+    showFeedback(`Polo≈æka ${currentItem.name} byla smaz√°na.`);
   }
 
   async function handleInstall() {
@@ -188,7 +188,7 @@ export default function App() {
     const result = await installPrompt.userChoice;
 
     if (result.outcome !== "accepted") {
-      showFeedback("Instalace byla zruöena.");
+      showFeedback("Instalace byla zru≈°ena.");
     }
 
     setInstallPrompt(null);
@@ -211,11 +211,11 @@ export default function App() {
       <main className="app-card">
         <header className="hero">
           <div>
-            <p className="eyebrow">Lok·lnÌ invent·¯</p>
-            <h1>Sledov·nÌ invent·¯e</h1>
+            <p className="eyebrow">Lok√°ln√≠ invent√°≈ô</p>
+            <h1>Sledov√°n√≠ invent√°≈ôe</h1>
             <p className="hero-copy">
-              Sledujte mnoûstvÌ jen v tomto za¯ÌzenÌ. Data jsou uloûena v prohlÌûeËi
-              a z˘st·vajÌ pouze v tomto profilu.
+              Sledujte mno≈æstv√≠ jen v tomto za≈ô√≠zen√≠. Data jsou ulo≈æena v prohl√≠≈æeƒçi
+              a z≈Øst√°vaj√≠ pouze v tomto profilu.
             </p>
           </div>
 
@@ -229,18 +229,18 @@ export default function App() {
         <section className="panel">
           <form className="item-form" onSubmit={handleAddItem}>
             <label className="field">
-              <span>N·zev poloûky</span>
+              <span>N√°zev polo≈æky</span>
               <input
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="K·vov· zrna"
+                placeholder="K√°vov√° zrna"
                 maxLength={80}
               />
             </label>
 
             <label className="field quantity-field">
-              <span>PoË·teËnÌ mnoûstvÌ</span>
+              <span>Poƒç√°teƒçn√≠ mno≈æstv√≠</span>
               <input
                 type="number"
                 inputMode="numeric"
@@ -252,7 +252,7 @@ export default function App() {
             </label>
 
             <button className="primary-button" type="submit">
-              P¯idat poloûku
+              P≈ôidat polo≈æku
             </button>
           </form>
         </section>
@@ -264,22 +264,22 @@ export default function App() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Filtrovat poloûky"
+              placeholder="Filtrovat polo≈æky"
             />
           </label>
           <p className="item-count">
             {filteredItems.length}{" "}
-            {filteredItems.length === 1 ? "poloûka" : "poloûek"}
+            {filteredItems.length === 1 ? "polo≈æka" : "polo≈æek"}
           </p>
         </section>
 
         <section className="list-section">
           {filteredItems.length === 0 ? (
             <div className="empty-state">
-              <h2>ZatÌm û·dnÈ poloûky</h2>
+              <h2>Zat√≠m ≈æ√°dn√© polo≈æky</h2>
               <p>
-                P¯idejte svou prvnÌ poloûku v˝öe. Vöe z˘st·v· uloûenÈ v localStorage
-                na tomto za¯ÌzenÌ.
+                P≈ôidejte svou prvn√≠ polo≈æku v√Ω≈°e. V≈°e z≈Øst√°v√° ulo≈æen√© v localStorage
+                na tomto za≈ô√≠zen√≠.
               </p>
             </div>
           ) : (
@@ -295,11 +295,11 @@ export default function App() {
                     <div>
                       <h2>{item.name}</h2>
                       <p className="meta">
-                        P¯id·no {new Date(item.createdAt).toLocaleDateString("cs-CZ")}
+                        P≈ôid√°no {new Date(item.createdAt).toLocaleDateString("cs-CZ")}
                       </p>
                     </div>
 
-                    <div className="quantity-badge" aria-label={`MnoûstvÌ ${item.quantity}`}>
+                    <div className="quantity-badge" aria-label={`Mno≈æstv√≠ ${item.quantity}`}>
                       {item.quantity}
                     </div>
                   </div>
@@ -309,7 +309,7 @@ export default function App() {
                       className="action-button"
                       type="button"
                       onClick={() => updateQuantity(item.id, -1)}
-                      aria-label={`SnÌûit mnoûstvÌ poloûky ${item.name}`}
+                      aria-label={`Sn√≠≈æit mno≈æstv√≠ polo≈æky ${item.name}`}
                     >
                       -
                     </button>
@@ -317,7 +317,7 @@ export default function App() {
                       className="action-button"
                       type="button"
                       onClick={() => updateQuantity(item.id, 1)}
-                      aria-label={`Zv˝öit mnoûstvÌ poloûky ${item.name}`}
+                      aria-label={`Zv√Ω≈°it mno≈æstv√≠ polo≈æky ${item.name}`}
                     >
                       +
                     </button>

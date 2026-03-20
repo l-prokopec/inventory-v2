@@ -1,7 +1,7 @@
 {
-  "name": "Sledování inventáøe",
-  "short_name": "Inventáø",
-  "description": "Lehká lokální aplikace pro sledování inventáøe.",
+  "name": "SledovÃ¡nÃ­ inventÃ¡Å™e",
+  "short_name": "InventÃ¡Å™",
+  "description": "LehkÃ¡ lokÃ¡lnÃ­ aplikace pro sledovÃ¡nÃ­ inventÃ¡Å™e.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f8fafc",
