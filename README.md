@@ -76,7 +76,7 @@ This repository includes a GitHub Actions workflow in `.github/workflows/deploy.
 1. Push the project to a GitHub repository.
 2. In GitHub, open `Settings > Pages`.
 3. Under `Build and deployment`, set `Source` to `GitHub Actions`.
-4. Push to the `main` branch, or run the workflow manually from the `Actions` tab.
+4. Push to the `master` branch, or run the workflow manually from the `Actions` tab.
 5. GitHub will publish the `dist/` output to GitHub Pages.
 
 ### Why `base: "./"` is used
